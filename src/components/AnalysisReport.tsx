@@ -48,6 +48,14 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
             <p className="opacity-90">
               Analyse {analysis.analysisType === 'advanced' ? 'approfondie' : 'rapide'} - 
               {analysis.filename && ` Fichier: ${analysis.filename}`}
+              {analysis.apiSources && (
+                <span className="block text-sm mt-1">
+                  Sources: {Object.entries(analysis.apiSources)
+                    .filter(([_, active]) => active)
+                    .map(([source, _]) => source.charAt(0).toUpperCase() + source.slice(1))
+                    .join(', ') || 'Analyse locale uniquement'}
+                </span>
+              )}
             </p>
             <p className="text-sm opacity-75 mt-1">
               Généré le {new Date(analysis.createdAt).toLocaleDateString('fr-FR', {
@@ -147,7 +155,7 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
       {/* Recommandations */}
       <div className="bg-blue-50 border border-blue-200 p-6 rounded-xl">
         <h3 className="text-lg font-semibold text-blue-800 mb-4">
-          Recommandations
+          Recommandations {analysis.apiSources && Object.values(analysis.apiSources).some(Boolean) && '(Basées sur APIs professionnelles)'}
         </h3>
         <div className="space-y-3 text-blue-700">
           {analysis.overallScore >= 70 && (
@@ -170,6 +178,13 @@ export const AnalysisReport: React.FC<AnalysisReportProps> = ({
               <p>• Travail probablement original de l'étudiant</p>
               <p>• Aucune action particulière requise</p>
             </>
+          )}
+          {analysis.apiSources && Object.values(analysis.apiSources).some(Boolean) && (
+            <div className="mt-4 p-3 bg-blue-100 rounded-lg">
+              <p className="text-sm font-medium">
+                ✓ Cette analyse utilise des APIs professionnelles de détection IA pour une fiabilité maximale
+              </p>
+            </div>
           )}
         </div>
       </div>

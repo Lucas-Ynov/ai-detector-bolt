@@ -22,6 +22,11 @@ export interface AnalysisResult {
     reasons: string[];
   }[];
   createdAt: string;
+  apiSources?: {
+    originality: boolean;
+    winston: boolean;
+    openai: boolean;
+  };
 }
 
 export interface FileUpload {

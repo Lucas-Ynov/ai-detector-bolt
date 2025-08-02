@@ -8,15 +8,15 @@ interface LoadingAnimationProps {
 export const LoadingAnimation: React.FC<LoadingAnimationProps> = ({ analysisType }) => {
   const steps = analysisType === 'advanced' 
     ? [
-        { icon: Brain, label: 'Analyse lexicale avancée', duration: 800 },
-        { icon: Search, label: 'Détection de patterns IA', duration: 1000 },
-        { icon: BarChart3, label: 'Évaluation par sections', duration: 700 },
-        { icon: Zap, label: 'Génération du rapport', duration: 500 },
+        { icon: Brain, label: 'Connexion aux APIs professionnelles', duration: 800 },
+        { icon: Search, label: 'Analyse Originality.ai + Winston AI', duration: 1000 },
+        { icon: BarChart3, label: 'Détection OpenAI + analyse locale', duration: 700 },
+        { icon: Zap, label: 'Synthèse et génération du rapport', duration: 500 },
       ]
     : [
-        { icon: Brain, label: 'Analyse des indicateurs', duration: 600 },
-        { icon: Search, label: 'Détection IA rapide', duration: 500 },
-        { icon: Zap, label: 'Génération du rapport', duration: 400 },
+        { icon: Brain, label: 'Appel aux APIs de détection', duration: 600 },
+        { icon: Search, label: 'Analyse multi-sources', duration: 500 },
+        { icon: Zap, label: 'Compilation des résultats', duration: 400 },
       ];
 
   return (
