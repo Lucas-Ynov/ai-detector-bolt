@@ -33,7 +33,15 @@ export class RealAIDetectionService {
 
   private static async callOpenAIDetection(text: string): Promise<number | null> {
     try {
-      const prompt = `Analysez ce texte français et donnez un score de 0 à 100 indiquant la probabilité qu'il ait été généré par une IA. Répondez uniquement avec le nombre:
+      const prompt = `Analysez ce texte français et donnez un score de 0 à 100 indiquant la probabilité qu'il ait été généré par une IA. 
+
+Critères d'évaluation stricts:
+- Répétitions de structures syntaxiques
+- Vocabulaire trop parfait ou artificiel
+- Transitions mécaniques entre idées
+- Absence d'erreurs naturelles
+- Style trop uniforme
+- Connecteurs logiques sur-utilisés
 
 Texte à analyser:
 ${text}
@@ -45,7 +53,7 @@ Score (0-100):`;
         messages: [
           {
             role: 'system',
-            content: 'Vous êtes un expert en détection de textes générés par IA, spécialisé dans l\'analyse de textes français académiques. Répondez uniquement avec un nombre entre 0 et 100.'
+            content: 'Vous êtes un expert en détection de textes générés par IA, spécialisé dans l\'analyse de textes français académiques. Soyez très strict dans votre évaluation. Un texte généré par IA doit avoir un score élevé (70-95). Répondez uniquement avec un nombre entre 0 et 100.'
           },
           {
             role: 'user',
@@ -66,38 +74,50 @@ Score (0-100):`;
   }
 
   private static async performAdvancedAnalysis(text: string): Promise<any> {
-    // Analyse linguistique avancée pour le français
     const words = text.split(/\s+/).filter(w => w.length > 0);
     const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
     const paragraphs = text.split(/\n\s*\n/).filter(p => p.trim().length > 0);
 
-    // Calcul de la diversité lexicale
-    const uniqueWords = new Set(words.map(w => w.toLowerCase()));
+    // Analyse de la diversité lexicale (plus stricte)
+    const uniqueWords = new Set(words.map(w => w.toLowerCase().replace(/[^\w]/g, '')));
     const lexicalDiversity = (uniqueWords.size / words.length) * 100;
+    const lexicalScore = lexicalDiversity < 40 ? 85 : lexicalDiversity < 50 ? 60 : lexicalDiversity < 60 ? 35 : 15;
 
-    // Analyse de la complexité syntaxique
+    // Analyse de la complexité syntaxique (détection plus fine)
     const avgSentenceLength = words.length / sentences.length;
     const sentenceLengths = sentences.map(s => s.split(/\s+/).length);
     const lengthVariation = this.calculateStandardDeviation(sentenceLengths);
+    
+    // IA tend à avoir des phrases de longueur très uniforme
+    const syntaxScore = lengthVariation < 3 ? 90 : lengthVariation < 5 ? 70 : lengthVariation < 8 ? 45 : 20;
 
-    // Détection de patterns répétitifs
+    // Détection de patterns répétitifs (plus sensible)
     const repetitivePatterns = this.detectRepetitivePatterns(sentences);
 
-    // Analyse du vocabulaire français spécialisé
+    // Analyse du vocabulaire français spécialisé (plus stricte)
     const frenchComplexity = this.analyzeFrenchComplexity(text);
 
-    // Détection de connecteurs logiques sur-utilisés
+    // Détection de connecteurs logiques sur-utilisés (plus sévère)
     const connectorOveruse = this.analyzeConnectorUsage(text);
 
+    // Analyse de la cohérence sémantique (détection IA améliorée)
+    const semanticCoherence = this.analyzeSemanticCoherence(text);
+
+    // Détection de patterns IA français spécifiques (renforcée)
+    const frenchSpecific = this.analyzeFrenchSpecificPatterns(text);
+
+    // Analyse de la fluidité naturelle (nouveau)
+    const naturalFlow = this.analyzeNaturalFlow(text);
+
     return {
-      lexicalDiversity: Math.max(0, 100 - lexicalDiversity * 2),
-      syntaxComplexity: Math.min(100, (avgSentenceLength > 20 ? 60 : 30) + (lengthVariation < 5 ? 40 : 20)),
-      semanticCoherence: this.analyzeSemanticCoherence(text),
+      lexicalDiversity: lexicalScore,
+      syntaxComplexity: syntaxScore,
+      semanticCoherence,
       repetitivePatterns,
       vocabularyRichness: frenchComplexity,
-      sentenceVariation: Math.max(0, 100 - lengthVariation * 3),
-      naturalFlow: connectorOveruse,
-      frenchSpecific: this.analyzeFrenchSpecificPatterns(text)
+      sentenceVariation: Math.min(100, 100 - lengthVariation * 8), // Plus sensible
+      naturalFlow,
+      frenchSpecific
     };
   }
 
@@ -109,85 +129,170 @@ Score (0-100):`;
 
   private static detectRepetitivePatterns(sentences: string[]): number {
     const patterns = new Map<string, number>();
+    let score = 0;
     
     sentences.forEach(sentence => {
-      // Analyse des débuts de phrases
-      const start = sentence.trim().split(/\s+/).slice(0, 3).join(' ').toLowerCase();
+      // Analyse des débuts de phrases (plus strict)
+      const start = sentence.trim().split(/\s+/).slice(0, 4).join(' ').toLowerCase();
       patterns.set(start, (patterns.get(start) || 0) + 1);
+      
+      // Analyse des structures grammaticales
+      const structure = sentence.replace(/[^a-zA-ZÀ-ÿ\s]/g, '').toLowerCase();
+      if (structure.includes('il est important') || structure.includes('il convient') || 
+          structure.includes('en effet') || structure.includes('par ailleurs')) {
+        score += 15;
+      }
     });
 
     const repetitions = Array.from(patterns.values()).filter(count => count > 1);
-    return Math.min(100, repetitions.length * 25);
+    const repetitionScore = repetitions.length * 30;
+    
+    return Math.min(100, score + repetitionScore);
   }
 
   private static analyzeFrenchComplexity(text: string): number {
-    const complexWords = [
+    const aiIndicators = [
+      // Connecteurs sur-utilisés par l'IA
       'néanmoins', 'cependant', 'toutefois', 'par conséquent', 'en effet',
-      'd\'ailleurs', 'en outre', 'de surcroît', 'qui plus est', 'en revanche'
+      'd\'ailleurs', 'en outre', 'de surcroît', 'qui plus est', 'en revanche',
+      'il est important de noter', 'il convient de souligner', 'il faut noter',
+      'premièrement', 'deuxièmement', 'troisièmement', 'finalement',
+      'en premier lieu', 'en second lieu', 'pour conclure', 'en conclusion'
     ];
     
     const words = text.toLowerCase().split(/\s+/);
-    const complexWordCount = complexWords.reduce((count, word) => {
-      return count + (text.toLowerCase().match(new RegExp(`\\b${word}\\b`, 'g')) || []).length;
-    }, 0);
-
-    const density = (complexWordCount / words.length) * 100;
-    return Math.min(100, density * 10); // Sur-utilisation de mots complexes = suspect
-  }
-
-  private static analyzeConnectorUsage(text: string): number {
-    const connectors = [
-      'premièrement', 'deuxièmement', 'troisièmement', 'finalement',
-      'en premier lieu', 'en second lieu', 'pour conclure', 'en conclusion',
-      'il est important de noter', 'il convient de souligner', 'il faut noter'
-    ];
-
     let score = 0;
-    connectors.forEach(connector => {
-      const matches = text.toLowerCase().match(new RegExp(`\\b${connector}\\b`, 'g'));
-      if (matches) score += matches.length * 15;
+    
+    aiIndicators.forEach(indicator => {
+      const regex = new RegExp(`\\b${indicator.replace(/'/g, "['']?")}\\b`, 'gi');
+      const matches = text.match(regex) || [];
+      score += matches.length * 12; // Plus pénalisant
+    });
+
+    // Détection de vocabulaire trop parfait
+    const perfectWords = [
+      'optimal', 'efficace', 'pertinent', 'significatif', 'considérable',
+      'substantiel', 'fondamental', 'essentiel', 'crucial', 'primordial'
+    ];
+    
+    perfectWords.forEach(word => {
+      const matches = text.toLowerCase().match(new RegExp(`\\b${word}\\b`, 'g')) || [];
+      score += matches.length * 8;
     });
 
     return Math.min(100, score);
   }
 
-  private static analyzeSemanticCoherence(text: string): number {
-    // Analyse basique de la cohérence sémantique
-    const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
-    const topics = new Set<string>();
-    
-    // Mots-clés thématiques français courants
-    const thematicWords = [
-      'société', 'économie', 'politique', 'culture', 'histoire', 'science',
-      'technologie', 'environnement', 'éducation', 'santé', 'art', 'littérature'
+  private static analyzeConnectorUsage(text: string): number {
+    const connectors = [
+      'premièrement', 'deuxièmement', 'troisièmement', 'quatrièmement', 'finalement',
+      'en premier lieu', 'en second lieu', 'en troisième lieu', 'pour conclure', 'en conclusion',
+      'il est important de noter', 'il convient de souligner', 'il faut noter que',
+      'par ailleurs', 'en outre', 'de plus', 'qui plus est', 'de surcroît',
+      'cependant', 'néanmoins', 'toutefois', 'en revanche', 'à l\'inverse'
     ];
 
-    sentences.forEach(sentence => {
-      thematicWords.forEach(theme => {
-        if (sentence.toLowerCase().includes(theme)) {
-          topics.add(theme);
-        }
-      });
+    let score = 0;
+    const sentences = text.split(/[.!?]+/).length;
+    
+    connectors.forEach(connector => {
+      const regex = new RegExp(`\\b${connector.replace(/'/g, "['']?")}\\b`, 'gi');
+      const matches = text.match(regex) || [];
+      score += matches.length * 20; // Plus pénalisant
     });
 
-    // Trop de thèmes différents peut indiquer un manque de cohérence naturelle
-    const thematicDensity = topics.size / sentences.length;
-    return Math.min(100, thematicDensity * 150);
+    // Bonus si trop de connecteurs par rapport au nombre de phrases
+    const density = score / sentences;
+    if (density > 15) score += 30;
+
+    return Math.min(100, score);
+  }
+
+  private static analyzeSemanticCoherence(text: string): number {
+    const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+    let score = 0;
+    
+    // Détection de transitions trop parfaites
+    const perfectTransitions = [
+      /\b(ainsi|donc|par conséquent|en conséquence|de ce fait)\b/gi,
+      /\b(d'une part.*d'autre part|d'un côté.*de l'autre)\b/gi,
+      /\b(en premier lieu.*en second lieu|premièrement.*deuxièmement)\b/gi
+    ];
+
+    perfectTransitions.forEach(pattern => {
+      const matches = text.match(pattern) || [];
+      score += matches.length * 25;
+    });
+
+    // Détection de structure trop logique
+    const logicalStructure = text.match(/\b(introduction|développement|conclusion)\b/gi) || [];
+    score += logicalStructure.length * 15;
+
+    // Absence d'hésitations ou d'imperfections naturelles
+    const naturalImperfections = text.match(/\b(euh|enfin|disons|peut-être|je pense|il me semble)\b/gi) || [];
+    if (naturalImperfections.length === 0 && sentences.length > 5) {
+      score += 40; // Pénalité pour perfection artificielle
+    }
+
+    return Math.min(100, score);
   }
 
   private static analyzeFrenchSpecificPatterns(text: string): number {
     const aiPatterns = [
+      // Patterns typiques de l'IA en français
       /\b(il est important de noter que|il convient de souligner que|il faut noter que)\b/gi,
-      /\b(en conclusion|pour conclure|en définitive|en somme)\b/gi,
-      /\b(d'une part.*d'autre part|premièrement.*deuxièmement)\b/gi,
-      /\b(par ailleurs|en outre|de plus|qui plus est)\b/gi
+      /\b(en conclusion|pour conclure|en définitive|en somme|pour résumer)\b/gi,
+      /\b(d'une part.*d'autre part|premièrement.*deuxièmement.*troisièmement)\b/gi,
+      /\b(par ailleurs|en outre|de plus|qui plus est|de surcroît)\b/gi,
+      /\b(cette approche|cette méthode|cette stratégie|cette solution)\b/gi,
+      /\b(il est essentiel de|il est crucial de|il est fondamental de)\b/gi,
+      /\b(dans le cadre de|au niveau de|en termes de|en matière de)\b/gi
     ];
 
     let score = 0;
     aiPatterns.forEach(pattern => {
-      const matches = text.match(pattern);
-      if (matches) score += matches.length * 20;
+      const matches = text.match(pattern) || [];
+      score += matches.length * 25; // Plus pénalisant
     });
+
+    // Détection de style académique artificiel
+    const academicClichés = [
+      'force est de constater', 'il ressort de cette analyse', 'cette étude révèle',
+      'les résultats montrent', 'il apparaît clairement', 'on peut observer'
+    ];
+
+    academicClichés.forEach(cliché => {
+      if (text.toLowerCase().includes(cliché)) {
+        score += 20;
+      }
+    });
+
+    return Math.min(100, score);
+  }
+
+  private static analyzeNaturalFlow(text: string): number {
+    let score = 0;
+    
+    // Détection de phrases trop uniformes en longueur
+    const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+    const lengths = sentences.map(s => s.split(/\s+/).length);
+    
+    // Vérification de l'uniformité (signe d'IA)
+    const avgLength = lengths.reduce((sum, len) => sum + len, 0) / lengths.length;
+    const uniformity = lengths.filter(len => Math.abs(len - avgLength) < 3).length / lengths.length;
+    
+    if (uniformity > 0.7) score += 50; // Trop uniforme = IA
+    
+    // Détection de ponctuation trop parfaite
+    const punctuationErrors = text.match(/[.!?]\s*[a-z]/g) || [];
+    if (punctuationErrors.length === 0 && sentences.length > 3) {
+      score += 30; // Pas d'erreurs = suspect
+    }
+
+    // Détection de répétitions de mots de liaison
+    const liaisons = text.match(/\b(et|ou|mais|donc|or|ni|car)\b/gi) || [];
+    const liaisonDensity = liaisons.length / sentences.length;
+    if (liaisonDensity > 2) score += 25;
 
     return Math.min(100, score);
   }
@@ -199,11 +304,14 @@ Score (0-100):`;
       return `${apiResults.originality.model_used} (Originality.ai)`;
     }
     
-    if (avgScore > 70) {
-      if (scores.frenchSpecific > 60) return 'ChatGPT (GPT-4)';
-      if (scores.syntaxComplexity > 65) return 'Claude (Anthropic)';
-      if (scores.vocabularyRichness > 70) return 'Gemini (Google)';
-      return 'IA Non Identifiée';
+    if (avgScore > 80) {
+      if (scores.frenchSpecific > 70) return 'ChatGPT (GPT-4/GPT-3.5)';
+      if (scores.syntaxComplexity > 75) return 'Claude (Anthropic)';
+      if (scores.vocabularyRichness > 80) return 'Gemini (Google Bard)';
+      if (scores.naturalFlow > 70) return 'GPT-4 (OpenAI)';
+      return 'IA Générative Détectée';
+    } else if (avgScore > 60) {
+      return 'Forte probabilité d\'IA';
     } else if (avgScore > 40) {
       return 'Possible assistance IA';
     }
@@ -216,7 +324,12 @@ Score (0-100):`;
     const sectionsToAnalyze = analysisType === 'advanced' ? paragraphs : paragraphs.slice(0, 3);
     
     return sectionsToAnalyze.map((section, index) => {
-      let sectionScore = Math.random() * 40 + 30; // Base score
+      let sectionScore = 50; // Score de base plus élevé
+      
+      // Analyse locale renforcée
+      const localAnalysis = this.performAdvancedAnalysis(section);
+      const localScore = Object.values(localAnalysis).reduce((sum: number, score: any) => sum + score, 0) / Object.keys(localAnalysis).length;
+      sectionScore = localScore;
       
       // Utiliser les données des APIs si disponibles
       if (apiResults.originality?.sentences) {
@@ -224,7 +337,8 @@ Score (0-100):`;
           section.includes(s.text.substring(0, 50))
         );
         if (relevantSentences.length > 0) {
-          sectionScore = relevantSentences.reduce((sum: number, s: any) => sum + s.ai_score, 0) / relevantSentences.length * 100;
+          const apiScore = relevantSentences.reduce((sum: number, s: any) => sum + s.ai_score, 0) / relevantSentences.length * 100;
+          sectionScore = (sectionScore + apiScore) / 2;
         }
       }
       
@@ -233,27 +347,30 @@ Score (0-100):`;
           section.includes(s.text.substring(0, 50))
         );
         if (relevantSentences.length > 0) {
-          const winstonScore = relevantSentences.reduce((sum: number, s: any) => sum + s.score, 0) / relevantSentences.length * 100;
+          const winstonScore = relevantSentences.reduce((sum: number, s: any) => sum + (1 - s.score), 0) / relevantSentences.length * 100;
           sectionScore = (sectionScore + winstonScore) / 2;
         }
       }
 
       const reasons = [];
-      if (sectionScore > 70) {
-        reasons.push('Patterns IA détectés par les APIs');
+      if (sectionScore > 75) {
+        reasons.push('Patterns IA fortement détectés');
         reasons.push('Structure artificielle confirmée');
         reasons.push('Vocabulaire généré automatiquement');
-      } else if (sectionScore > 40) {
-        reasons.push('Quelques indicateurs suspects');
-        reasons.push('Style possiblement assisté');
+        reasons.push('Absence de variations naturelles');
+      } else if (sectionScore > 50) {
+        reasons.push('Indicateurs suspects détectés');
+        reasons.push('Style possiblement assisté par IA');
+        reasons.push('Transitions trop parfaites');
       } else {
         reasons.push('Style naturel détecté');
         reasons.push('Variations humaines confirmées');
+        reasons.push('Imperfections naturelles présentes');
       }
 
       return {
-        text: section.slice(0, 150) + (section.length > 150 ? '...' : ''),
-        suspicionLevel: sectionScore > 70 ? 'high' : sectionScore > 40 ? 'medium' : 'low',
+        text: section.slice(0, 200) + (section.length > 200 ? '...' : ''),
+        suspicionLevel: sectionScore > 75 ? 'high' : sectionScore > 50 ? 'medium' : 'low',
         score: Math.round(sectionScore),
         reasons
       };
@@ -276,34 +393,45 @@ Score (0-100):`;
         openai: openaiResult.status === 'fulfilled' ? openaiResult.value : null
       };
 
-      // Analyse avancée locale
+      // Analyse avancée locale (plus stricte)
       const advancedIndicators = await this.performAdvancedAnalysis(text);
 
-      // Calcul du score global en combinant toutes les sources
+      // Calcul du score global avec pondération améliorée
       let overallScore = 0;
       let scoreCount = 0;
+      const scores: number[] = [];
 
       if (apiResults.originality?.score?.ai) {
-        overallScore += apiResults.originality.score.ai * 100;
+        const originalityScore = apiResults.originality.score.ai * 100;
+        scores.push(originalityScore);
         scoreCount++;
       }
 
       if (apiResults.winston?.result?.score) {
-        overallScore += (1 - apiResults.winston.result.score) * 100; // Winston donne un score humain
+        const winstonScore = (1 - apiResults.winston.result.score) * 100;
+        scores.push(winstonScore);
         scoreCount++;
       }
 
       if (apiResults.openai !== null) {
-        overallScore += apiResults.openai;
+        scores.push(apiResults.openai);
         scoreCount++;
       }
 
-      // Ajouter le score de l'analyse locale
+      // Score de l'analyse locale (plus important maintenant)
       const localScore = Object.values(advancedIndicators).reduce((sum: number, score: any) => sum + score, 0) / Object.keys(advancedIndicators).length;
-      overallScore += localScore;
-      scoreCount++;
+      scores.push(localScore);
+      scores.push(localScore); // Double poids pour l'analyse locale
+      scoreCount += 2;
 
-      overallScore = scoreCount > 0 ? overallScore / scoreCount : localScore;
+      // Calcul de la moyenne pondérée
+      overallScore = scores.reduce((sum, score) => sum + score, 0) / scores.length;
+
+      // Bonus si plusieurs sources concordent sur un score élevé
+      const highScores = scores.filter(score => score > 70).length;
+      if (highScores >= 2) {
+        overallScore = Math.min(100, overallScore + 10);
+      }
 
       const result: AnalysisResult = {
         id: crypto.randomUUID(),
@@ -326,7 +454,7 @@ Score (0-100):`;
     } catch (error) {
       console.error('Erreur lors de l\'analyse:', error);
       
-      // Fallback vers l'analyse locale en cas d'erreur API
+      // Fallback vers l'analyse locale renforcée
       const advancedIndicators = await this.performAdvancedAnalysis(text);
       const localScore = Object.values(advancedIndicators).reduce((sum: number, score: any) => sum + score, 0) / Object.keys(advancedIndicators).length;
 
