@@ -1,5 +1,32 @@
 # 🚀 Instructions de Déploiement GitHub Pages
 
+## 🎯 Utilisation du Script Automatique
+
+### Étape 1: Télécharger le script
+1. **Téléchargez le fichier** `deploy-to-github.sh` depuis cette interface Bolt
+2. **Placez-le** dans le dossier racine de votre projet local
+
+### Étape 2: Rendre le script exécutable
+Ouvrez un terminal dans le dossier de votre projet et tapez :
+```bash
+chmod +x deploy-to-github.sh
+```
+
+### Étape 3: Exécuter le script
+```bash
+./deploy-to-github.sh
+```
+
+**C'est tout !** Le script va :
+- ✅ Vérifier que vous êtes dans un repo Git
+- ✅ Construire le projet pour GitHub Pages
+- ✅ Ajouter tous les fichiers modifiés
+- ✅ Faire un commit avec un message descriptif
+- ✅ Pousser vers GitHub
+- ✅ Vous donner l'URL de votre site
+
+---
+
 ## Méthode 1: Script Automatique (Recommandé)
 
 1. **Ouvrez un terminal** dans le dossier de votre projet
@@ -11,6 +38,27 @@
    ```bash
    ./deploy-to-github.sh
    ```
+
+## 🆘 Résolution de Problèmes
+
+### Si vous obtenez "Permission denied"
+```bash
+chmod +x deploy-to-github.sh
+./deploy-to-github.sh
+```
+
+### Si vous n'avez pas Git configuré
+```bash
+git config --global user.name "Votre Nom"
+git config --global user.email "votre.email@example.com"
+```
+
+### Si le script ne trouve pas npm
+Assurez-vous que Node.js est installé :
+```bash
+node --version
+npm --version
+```
 
 ## Méthode 2: Commandes Manuelles
 
